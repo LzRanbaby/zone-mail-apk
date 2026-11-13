@@ -69,8 +69,8 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState)
         } else {
-            // 测试版新界面（v3.5.0）；正式版上线后改成正式站地址再重新打包
-            webView.loadUrl("https://zone-mail-test.liziran254.workers.dev")
+            // 测试站已挂自有域名 mail.zone.my.id（原 workers.dev 在国内直连不稳）；正式版上线后改成正式站地址再重新打包
+            webView.loadUrl("https://mail.zone.my.id")
         }
     }
 
