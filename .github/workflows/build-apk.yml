@@ -19,7 +19,14 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      # Pin the Android SDK pieces AGP 8.5.2 / compileSdk 34 actually needs.
+      # android-actions/setup-android@v3 defaults to installing the
+      # obsolete 'tools' package, which no longer exists and makes
+      # sdkmanager exit 1 (seen 2026-11-14, run #6).
       - uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 11076708
+          packages: platform-tools platforms;android-34 build-tools;34.0.0
 
       - uses: gradle/actions/setup-gradle@v4
         with:
