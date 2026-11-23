@@ -2,14 +2,18 @@ package com.zonemail.app
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.DownloadManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
+import android.webkit.URLUtil
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 
@@ -49,6 +53,27 @@ class MainActivity : ComponentActivity() {
             cacheMode = WebSettings.LOAD_DEFAULT
         }
         webView.webViewClient = WebViewClient()
+        // 附件下载：WebView 默认点下载链接没反应，必须自己接手交给系统下载器。
+        // 关键要带上登录 Cookie，否则下载器拿不到登录态，下回来的是登录页而不是文件。
+        webView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
+            val fileName = URLUtil.guessFileName(url, contentDisposition, mimeType)
+            val request = DownloadManager.Request(Uri.parse(url)).apply {
+                setMimeType(mimeType)
+                addRequestHeader("User-Agent", userAgent)
+                android.webkit.CookieManager.getInstance().getCookie(url)?.let {
+                    addRequestHeader("Cookie", it)
+                }
+                setTitle(fileName)
+                setDescription(fileName)
+                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+                setAllowedOverMetered(true)
+                setAllowedOverRoaming(true)
+            }
+            val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+            dm.enqueue(request)
+            Toast.makeText(this, "开始下载：$fileName", Toast.LENGTH_SHORT).show()
+        }
         webView.webChromeClient = object : WebChromeClient() {
             override fun onShowFileChooser(
                 view: WebView,
